@@ -1,71 +1,167 @@
 
-// ===== GROQ AI BRAIN =====
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
 
-// API key is stored in this browser only.
-// This is convenient for testing, NOT secure storage.
 let GROQ_KEY = localStorage.getItem("jarvis_groq_key");
 
-if (!GROQ_KEY) {
-  GROQ_KEY = prompt("Enter your Groq API Key:");
-  if (GROQ_KEY) {
-    localStorage.setItem("jarvis_groq_key", GROQ_KEY.trim());
-    GROQ_KEY = GROQ_KEY.trim();
-  }
+function add(message, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = message;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-// Groq chat completion
-async function callGroq(promptText) {
+function speak(message) {
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(message);
+  speech.lang = "en-US";
+  speech.rate = 1;
+
+  window.speechSynthesis.speak(speech);
+}
+
+async function askGroq(question) {
   if (!GROQ_KEY) {
-    throw new Error("Groq API Key is missing");
-  }
+    const key = prompt("Enter your Groq API Key:");
 
-  const response = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + GROQ_KEY
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-20b",
-        messages: [
-          {
-            role: "system",
-            content: "You are J.A.R.V.I.S, a helpful AI voice assistant. Reply clearly and naturally."
-          },
-          {
-            role: "user",
-            content: promptText
-          }
-        ],
-        temperature: 0.7,
-        max_completion_tokens: 1024
-      })
+    if (!key || !key.trim()) {
+      add("Please enter your Groq API Key.", "ai");
+      return;
     }
-  );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.error?.message || "Groq API request failed"
-    );
+    GROQ_KEY = key.trim();
+    localStorage.setItem("jarvis_groq_key", GROQ_KEY);
   }
 
-  return data.choices[0].message.content;
-}
+  const loading = document.createElement("div");
+  loading.className = "msg ai";
+  loading.textContent = "J.A.R.V.I.S: Thinking...";
+  chat.appendChild(loading);
 
-// Ask Groq and speak the answer
-async function askGemini(promptText) {
-  add("J.A.R.V.I.S: Thinking with Groq...", "ai");
+  sendBtn.disabled = true;
 
   try {
-    const reply = await callGroq(promptText);
-    chat.lastChild.innerText = "J.A.R.V.I.S: " + reply;
-    speak(reply);
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + GROQ_KEY
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-20b",
+          messages: [
+            {
+              role: "system",
+              content: "You are J.A.R.V.I.S, a friendly intelligent AI assistant. Address the user as Boss."
+            },
+            {
+              role: "user",
+              content: question
+            }
+          ],
+          temperature: 0.7,
+          max_completion_tokens: 1024
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error?.message || "Groq API request failed"
+      );
+    }
+
+    const answer = data.choices[0].message.content;
+
+    loading.textContent = "J.A.R.V.I.S: " + answer;
+    speak(answer);
+
   } catch (error) {
-    chat.lastChild.innerText =
+    loading.textContent =
       "J.A.R.V.I.S ERROR: " + error.message;
+
+  } finally {
+    sendBtn.disabled = false;
   }
 }
+
+// ===== MICROPHONE VOICE INPUT =====
+
+const micBtn = document.getElementById("mic-btn");
+
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition && micBtn) {
+  const rec = new SpeechRecognition();
+
+  rec.lang = "te-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+
+  rec.onstart = () => {
+    micBtn.textContent = "🔴 Listening...";
+    micBtn.disabled = true;
+  };
+
+  rec.onresult = (event) => {
+    const spokenText = event.results[0][0].transcript;
+
+    add("YOU: " + spokenText, "user");
+    askGroq(spokenText);
+  };
+
+  rec.onerror = (event) => {
+    add("MIC ERROR: " + event.error, "ai");
+  };
+
+  rec.onend = () => {
+    micBtn.textContent = "🎙️";
+    micBtn.disabled = false;
+  };
+
+  micBtn.addEventListener("click", () => {
+    try {
+      rec.start();
+    } catch (error) {
+      add("Microphone is already listening.", "ai");
+    }
+  });
+
+} else if (micBtn) {
+  micBtn.disabled = true;
+  add("Speech recognition is not supported in this browser.", "ai");
+}
+
+// ===== TEXT SEND BUTTON =====
+
+sendBtn.addEventListener("click", () => {
+  const question = input.value.trim();
+
+  if (!question) return;
+
+  add("YOU: " + question, "user");
+  input.value = "";
+
+  askGroq(question);
+});
+
+input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    sendBtn.click();
+  }
+});
+
+add(
+  "J.A.R.V.I.S: Groq AI initialized. How may I assist you, Boss?",
+  "ai"
+);
