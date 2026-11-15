@@ -6,7 +6,6 @@
 // ==========================================
 
 // 1. HTML ELEMENTS
-
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
@@ -16,10 +15,7 @@ const camBtn = document.getElementById("cam-btn");
 const imgInput = document.getElementById("img-input");
 
 // 2. API SETTINGS
-
-const GROQ_URL =
-  "https://api.groq.com/openai/v1/chat/completions";
-
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const CHAT_MODEL = "openai/gpt-oss-20b";
 const VISION_MODEL = "qwen/qwen3.8-27b";
 
@@ -30,14 +26,12 @@ try {
   conversation = JSON.parse(
     localStorage.getItem("jarvis_memory") || "[]"
   );
-
   if (!Array.isArray(conversation)) conversation = [];
 } catch {
   conversation = [];
 }
 
 // 3. MEMORY
-
 function saveMemory() {
   localStorage.setItem(
     "jarvis_memory",
@@ -46,7 +40,6 @@ function saveMemory() {
 }
 
 // 4. DISPLAY MESSAGE
-
 function add(message, who) {
   if (!chat) return null;
 
@@ -61,7 +54,6 @@ function add(message, who) {
 }
 
 // 5. VOICE OUTPUT
-
 function speak(message) {
   if (!("speechSynthesis" in window)) return;
 
@@ -76,7 +68,6 @@ function speak(message) {
 }
 
 // 6. API KEY
-
 function getGroqKey() {
   if (GROQ_KEY) return true;
 
@@ -94,7 +85,6 @@ function getGroqKey() {
 }
 
 // 7. RESTORE OLD CONVERSATION
-
 conversation.forEach(message => {
   if (message.role === "user") {
     add("YOU: " + message.content, "user");
@@ -108,7 +98,6 @@ conversation.forEach(message => {
 // ==========================================
 
 // HELPER: FETCH JSON
-
 async function fetchJSON(url) {
   const response = await fetch(url);
 
@@ -120,7 +109,6 @@ async function fetchJSON(url) {
 }
 
 // HELPER: LOCATION
-
 function getLocation() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -140,7 +128,6 @@ function getLocation() {
 }
 
 // TOOL 1: TIME
-
 function timeTool() {
   return "ప్రస్తుతం సమయం " +
     new Date().toLocaleTimeString("te-IN") +
@@ -148,7 +135,6 @@ function timeTool() {
 }
 
 // TOOL 2: WEATHER
-
 async function weatherTool() {
   try {
     const location = await getLocation();
@@ -173,7 +159,6 @@ async function weatherTool() {
 }
 
 // TOOL 3: TIMER
-
 function timerTool(text) {
   const match = text.match(
     /(\d+)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)/i
@@ -207,7 +192,6 @@ function timerTool(text) {
 }
 
 // TOOL 4: DICE / COIN
-
 function diceCoinTool(text) {
   const t = text.toLowerCase();
 
@@ -221,7 +205,6 @@ function diceCoinTool(text) {
 }
 
 // TOOL 5: RANDOM JOKE
-
 async function jokeTool() {
   try {
     const data = await fetchJSON(
@@ -238,14 +221,14 @@ async function jokeTool() {
 }
 
 // TOOL 6: DAILY QUOTE
-
 async function quoteTool() {
   try {
     const data = await fetchJSON(
       "https://dummyjson.com/quotes/random"
     );
 
-    return `Daily Quote: ${data.quote}\nAuthor: ${data.author}`;
+    return `Daily Quote: ${data.quote}
+Author: ${data.author}`;
 
   } catch {
     return "Quote పొందలేకపోయాను.";
@@ -253,7 +236,6 @@ async function quoteTool() {
 }
 
 // TOOL 7: TECH NEWS
-
 async function newsTool() {
   try {
     const data = await fetchJSON(
@@ -275,7 +257,6 @@ async function newsTool() {
 }
 
 // TOOL 8: TELUGU TRANSLATOR
-
 async function translateTool(text) {
   const query = text.replace(
     /^(translate|translate this|అనువదించు)\s*/i,
@@ -303,7 +284,6 @@ async function translateTool(text) {
 }
 
 // TOOL 9: CURRENCY EXCHANGE
-
 async function currencyTool(text) {
   const match = text.match(
     /(\d+(?:\.\d+)?)\s*(USD|INR|EUR|GBP|JPY)\s*(?:to|in|into)\s*(USD|INR|EUR|GBP|JPY)/i
@@ -330,7 +310,6 @@ async function currencyTool(text) {
 }
 
 // TOOL 10: WORD MEANING
-
 async function meaningTool(text) {
   const word = text.replace(
     /^(meaning of|define|meaning|word meaning)\s*/i,
@@ -359,9 +338,9 @@ async function meaningTool(text) {
 }
 
 // TOOL 11: PASSWORD GENERATOR
-
 function passwordTool(text) {
   const match = text.match(/\b(\d{1,2})\b/);
+
   const length = match
     ? Math.min(64, Math.max(8, Number(match[1])))
     : 16;
@@ -384,14 +363,15 @@ function passwordTool(text) {
 }
 
 // TOOL 12: WIKIPEDIA SEARCH
-
 async function wikipediaTool(text) {
   const query = text.replace(
     /^(wikipedia|search wikipedia|search)\s*/i,
     ""
   ).trim();
 
-  if (!query) return "Wikipediaలో ఏ విషయం వెతకాలో చెప్పండి.";
+  if (!query) {
+    return "Wikipediaలో ఏ విషయం వెతకాలో చెప్పండి.";
+  }
 
   try {
     const data = await fetchJSON(
@@ -409,7 +389,9 @@ async function wikipediaTool(text) {
       encodeURIComponent(result.title)
     );
 
-    return `${result.title}\n${details.extract || "వివరాలు లేవు."}\nhttps://en.wikipedia.org/wiki/${encodeURIComponent(result.title.replace(/ /g, "_"))}`;
+    return `${result.title}
+${details.extract || "వివరాలు లేవు."}
+https://en.wikipedia.org/wiki/${encodeURIComponent(result.title.replace(/ /g, "_"))}`;
 
   } catch {
     return "Wikipedia service error.";
@@ -417,17 +399,16 @@ async function wikipediaTool(text) {
 }
 
 // TOOL 13: OPEN APPS
-
 function openAppTool(text) {
-  const t = text.toLowerCase();
+  const t = text.toLowerCase().trim();
 
-  if (t.includes("youtube")) {
-    window.open("https://www.youtube.com/", "_blank");
+  if (/youtube|యూట్యూబ్/.test(t)) {
+    window.location.href = "https://www.youtube.com/";
     return "YouTube తెరుస్తున్నాను, Boss.";
   }
 
-  if (t.includes("google")) {
-    window.open("https://www.google.com/", "_blank");
+  if (/google|గూగుల్/.test(t)) {
+    window.location.href = "https://www.google.com/";
     return "Google తెరుస్తున్నాను, Boss.";
   }
 
@@ -435,26 +416,38 @@ function openAppTool(text) {
 }
 
 // TOOL 14: YOUTUBE SONG SEARCH
-
 function youtubeTool(text) {
-  const query = text.replace(
-    /^(play|youtube|search youtube)\s*/i,
+  let query = text.trim();
+
+  query = query.replace(
+    /^(play|youtube|search youtube|ప్లే)\s*/i,
     ""
-  ).trim();
-
-  if (!query) return "ఏ పాట వెతకాలో చెప్పండి.";
-
-  window.open(
-    "https://www.youtube.com/results?search_query=" +
-    encodeURIComponent(query),
-    "_blank"
   );
+
+  query = query.replace(
+    /^(a song|song|పాట)\s*/i,
+    ""
+  );
+
+  query = query.replace(
+    /^(and play song|play song|పాట ప్లే చేయి)\s*/i,
+    ""
+  );
+
+  query = query.trim();
+
+  if (!query) {
+    return "ఏ పాట వెతకాలో చెప్పండి, Boss.";
+  }
+
+  window.location.href =
+    "https://www.youtube.com/results?search_query=" +
+    encodeURIComponent(query);
 
   return `${query} కోసం YouTubeలో వెతుకుతున్నాను.`;
 }
 
 // TOOL 15: CRYPTO PRICE
-
 async function cryptoTool(text) {
   const t = text.toLowerCase();
 
@@ -474,7 +467,9 @@ async function cryptoTool(text) {
       coin + "&vs_currencies=usd,inr"
     );
 
-    if (!data[coin]) return "Crypto price అందుబాటులో లేదు.";
+    if (!data[coin]) {
+      return "Crypto price అందుబాటులో లేదు.";
+    }
 
     return `${coin.toUpperCase()} Price:
 USD: $${data[coin].usd}
@@ -493,6 +488,7 @@ async function handleTools(text) {
   const t = text.toLowerCase().trim();
 
   try {
+
     // TIME
     if (
       /\b(what time|current time|time now|time)\b/.test(t) ||
@@ -517,27 +513,28 @@ async function handleTools(text) {
     ) return diceCoinTool(text);
 
     // JOKE
-    if (/\b(joke|tell me a joke)\b/.test(t) || /జోక్/.test(t)) {
-      return await jokeTool();
-    }
+    if (
+      /\b(joke|tell me a joke)\b/.test(t) ||
+      /జోక్/.test(t)
+    ) return await jokeTool();
 
     // QUOTE
-    if (/\b(quote|daily quote|motivation quote)\b/.test(t) ||
-        /కోట్|ప్రేరణ/.test(t)) {
-      return await quoteTool();
-    }
+    if (
+      /\b(quote|daily quote|motivation quote)\b/.test(t) ||
+      /కోట్|ప్రేరణ/.test(t)
+    ) return await quoteTool();
 
     // TECH NEWS
-    if (/\b(tech news|technology news)\b/.test(t) ||
-        /టెక్ న్యూస్/.test(t)) {
-      return await newsTool();
-    }
+    if (
+      /\b(tech news|technology news)\b/.test(t) ||
+      /టెక్ న్యూస్/.test(t)
+    ) return await newsTool();
 
     // TRANSLATOR
-    if (/^translate\b/.test(t) ||
-        /^(అనువదించు|తెలుగులోకి అనువదించు)/.test(t)) {
-      return await translateTool(text);
-    }
+    if (
+      /^translate\b/.test(t) ||
+      /^(అనువదించు|తెలుగులోకి అనువదించు)/.test(t)
+    ) return await translateTool(text);
 
     // CURRENCY
     if (/\b(usd|inr|eur|gbp|jpy)\b.*\b(to|in|into)\b/i.test(t)) {
@@ -550,37 +547,43 @@ async function handleTools(text) {
     }
 
     // PASSWORD
-    if (/\b(generate password|create password|password generator)\b/.test(t) ||
-        /పాస్‌వర్డ్/.test(t)) {
-      return passwordTool(text);
-    }
+    if (
+      /\b(generate password|create password|password generator)\b/.test(t) ||
+      /పాస్‌వర్డ్/.test(t)
+    ) return passwordTool(text);
 
     // WIKIPEDIA
     if (/^(wikipedia|search wikipedia)\b/.test(t)) {
       return await wikipediaTool(text);
     }
 
-    // OPEN APPS
-    if (/^(open|launch)\s+(youtube|google)\b/.test(t)) {
+    // OPEN YOUTUBE / GOOGLE
+    if (
+      /^(open|launch)\s+(youtube|google)\b/.test(t) ||
+      /^(ఓపెన్|తెరవు)\s*(యూట్యూబ్|గూగుల్)/.test(t)
+    ) {
       return openAppTool(text);
     }
 
     // YOUTUBE SONGS
-    if (/^(play|youtube)\b/.test(t) ||
-        /పాట ప్లే/.test(t)) {
+    if (
+      /^(play|youtube|search youtube)\b/.test(t) ||
+      /^(ప్లే|పాట ప్లే)/.test(t)
+    ) {
       return youtubeTool(text);
     }
 
     // CRYPTO
-    if (/\b(crypto price|bitcoin|ethereum|dogecoin|solana)\b/.test(t)) {
-      return await cryptoTool(text);
-    }
+    if (
+      /\b(crypto price|bitcoin|ethereum|dogecoin|solana)\b/.test(t)
+    ) return await cryptoTool(text);
 
     // NO TOOL MATCH
     return null;
 
   } catch (error) {
     console.error("Tool Error:", error);
+
     return "క్షమించండి Boss, ఆ Tool ప్రస్తుతం పనిచేయడం లేదు.";
   }
 }
@@ -619,12 +622,15 @@ async function askGroq(question) {
   try {
     const response = await fetch(GROQ_URL, {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + GROQ_KEY
       },
+
       body: JSON.stringify({
         model: CHAT_MODEL,
+
         messages: [
           {
             role: "system",
@@ -633,6 +639,7 @@ async function askGroq(question) {
           },
           ...conversation
         ],
+
         temperature: 0.7,
         max_completion_tokens: 1024
       })
@@ -656,6 +663,7 @@ async function askGroq(question) {
     saveMemory();
 
     loading.textContent = "J.A.R.V.I.S: " + answer;
+
     speak(answer);
 
   } catch (error) {
@@ -678,6 +686,7 @@ const SpeechRecognition =
   window.webkitSpeechRecognition;
 
 if (SpeechRecognition && micBtn) {
+
   const rec = new SpeechRecognition();
 
   rec.lang = "te-IN";
@@ -693,6 +702,7 @@ if (SpeechRecognition && micBtn) {
     const spokenText = event.results[0][0].transcript;
 
     add("YOU: " + spokenText, "user");
+
     askGroq(spokenText);
   };
 
@@ -714,7 +724,9 @@ if (SpeechRecognition && micBtn) {
   });
 
 } else if (micBtn) {
+
   micBtn.disabled = true;
+
   add("Speech recognition is not supported.", "ai");
 }
 
@@ -723,7 +735,9 @@ if (SpeechRecognition && micBtn) {
 // ==========================================
 
 if (sendBtn && input) {
+
   sendBtn.addEventListener("click", () => {
+
     const question = input.value.trim();
 
     if (!question || sendBtn.disabled) return;
@@ -731,6 +745,7 @@ if (sendBtn && input) {
     add("YOU: " + question, "user");
 
     input.value = "";
+
     askGroq(question);
   });
 }
@@ -740,11 +755,14 @@ if (sendBtn && input) {
 // ==========================================
 
 if (input && sendBtn) {
+
   input.addEventListener("keydown", event => {
+
     if (event.key === "Enter") {
       event.preventDefault();
       sendBtn.click();
     }
+
   });
 }
 
@@ -753,7 +771,9 @@ if (input && sendBtn) {
 // ==========================================
 
 if (clearBtn) {
+
   clearBtn.addEventListener("click", () => {
+
     const confirmClear = confirm(
       "Are you sure you want to clear JARVIS memory?"
     );
@@ -772,6 +792,7 @@ if (clearBtn) {
     );
 
     window.speechSynthesis?.cancel();
+
   });
 }
 
@@ -780,6 +801,7 @@ if (clearBtn) {
 // ==========================================
 
 async function askVision(base64, mimeType, question) {
+
   if (!getGroqKey()) return;
 
   const loading = add(
@@ -790,29 +812,39 @@ async function askVision(base64, mimeType, question) {
   if (sendBtn) sendBtn.disabled = true;
 
   try {
+
     const response = await fetch(GROQ_URL, {
+
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + GROQ_KEY
       },
+
       body: JSON.stringify({
+
         model: VISION_MODEL,
+
         messages: [
           {
             role: "system",
             content:
               "You are J.A.R.V.I.S. Look carefully at the image and explain what you see in simple Telugu. Address the user as Boss. If something is unclear, say so honestly."
           },
+
           {
             role: "user",
+
             content: [
               {
                 type: "text",
                 text: question
               },
+
               {
                 type: "image_url",
+
                 image_url: {
                   url: "data:" + mimeType + ";base64," + base64
                 }
@@ -820,9 +852,12 @@ async function askVision(base64, mimeType, question) {
             ]
           }
         ],
+
         temperature: 0.4,
         max_completion_tokens: 1024
+
       })
+
     });
 
     const data = await response.json();
@@ -849,13 +884,17 @@ async function askVision(base64, mimeType, question) {
     saveMemory();
 
     loading.textContent = "J.A.R.V.I.S: " + answer;
+
     speak(answer);
 
   } catch (error) {
+
     loading.textContent = "VISION ERROR: " + error.message;
 
   } finally {
+
     if (sendBtn) sendBtn.disabled = false;
+
   }
 }
 
@@ -864,53 +903,42 @@ async function askVision(base64, mimeType, question) {
 // ==========================================
 
 if (camBtn && imgInput) {
+
   camBtn.addEventListener("click", () => {
     imgInput.click();
   });
 
   imgInput.addEventListener("change", () => {
+
     const file = imgInput.files[0];
 
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
+
       add("Please select an image file.", "ai");
+
       imgInput.value = "";
+
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
+
       add(
         "Boss, please select a photo smaller than 10 MB.",
         "ai"
       );
+
       imgInput.value = "";
+
       return;
     }
 
     const reader = new FileReader();
 
     reader.onload = () => {
+
       const base64 = reader.result.split(",")[1];
 
-      const question =
-        input?.value.trim() ||
-        "ఈ ఫోటోలో ఏముంది? తెలుగులో వివరించు.";
-
-      if (input) input.value = "";
-
-      add("YOU: Photo selected - " + file.name, "user");
-
-      askVision(base64, file.type, question);
-
-      imgInput.value = "";
-    };
-
-    reader.onerror = () => {
-  add("Could not read the selected photo.", "ai");
-};
-
-reader.readAsDataURL(file);
-
-});
-}
+      cons
