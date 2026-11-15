@@ -244,3 +244,24 @@ add(
   "J.A.R.V.I.S: Groq AI initialized. How may I assist you, Boss?",
   "ai"
 );
+// ===== CAMERA BUTTON =====
+const camBtn = document.getElementById("cam-btn");
+const imgInput = document.getElementById("img-input");
+
+if (camBtn && imgInput) {
+
+  camBtn.addEventListener("click", () => {
+    imgInput.click();
+  });
+
+  imgInput.addEventListener("change", () => {
+
+    const file = imgInput.files[0];
+
+    if (file) {
+      add("YOU: Image selected - " + file.name, "user");
+    }
+
+  });
+
+}
