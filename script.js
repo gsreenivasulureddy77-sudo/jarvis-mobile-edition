@@ -908,4 +908,4 @@ if (camBtn && imgInput) {
 
     reader.onerror = () => {
       add("Could not read the selected photo.", "ai");
-      imgInpu
+      imgInput.addEventListener("change", () =>
