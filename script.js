@@ -670,5 +670,84 @@ if (input && sendBtn) {
 if (clearBtn) {
   clearBtn.addEventListener("click", () => {
     if (!confirm("Are you sure you want to clear JARVIS memory?")) return;
+
     conversation = [];
-    localStorage.removeItem("jarvis_m
+
+    localStorage.removeItem("jarvis_memory");
+    localStorage.removeItem("jarvis_memory_v1");
+
+    if (chat) chat.innerHTML = "";
+
+    add("J.A.R.V.I.S: Memory cleared successfully, Boss!", "ai");
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  });
+}
+
+// 13. CAMERA BUTTON + IMAGE PICKER
+if (camBtn && imgInput) {
+  camBtn.addEventListener("click", () => {
+    imgInput.click();
+  });
+
+  imgInput.addEventListener("change", () => {
+    const file = imgInput.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      add("Image file మాత్రమే select చేయండి, Boss.", "ai");
+      imgInput.value = "";
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      add("10 MB కంటే చిన్న photo select చేయండి, Boss.", "ai");
+      imgInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",")
+        ? result.split(",")[1]
+        : "";
+
+      const question = input?.value.trim() ||
+        "ఈ ఫోటోలో ఏముంది? తెలుగులో వివరించండి.";
+
+      if (!base64) {
+        add("Photo చదవలేకపోయాను, Boss.", "ai");
+        return;
+      }
+
+      add("YOU: [PHOTO] " + question, "user");
+
+      if (input) input.value = "";
+
+      askVision(base64, file.type, question);
+
+      imgInput.value = "";
+    };
+
+    reader.onerror = () => {
+      add("Photo file చదవడంలో సమస్య వచ్చింది.", "ai");
+      imgInput.value = "";
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+// 14. STARTUP MESSAGE
+if (chat && chat.children.length === 0) {
+  add(
+    "J.A.R.V.I.S Online, Boss. Groq Brain ready. How may I assist you?",
+    "ai"
+  );
+}
+
