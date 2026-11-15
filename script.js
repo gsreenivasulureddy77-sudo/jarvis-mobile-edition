@@ -678,7 +678,7 @@ async function askGroq(question) {
 }
 
 // ==========================================
-// 10. MICROPHONE
+// 10. MICROPHONE - FIXED VERSION
 // ==========================================
 
 const SpeechRecognition =
@@ -686,28 +686,55 @@ const SpeechRecognition =
   window.webkitSpeechRecognition;
 
 if (SpeechRecognition && micBtn) {
-
   const rec = new SpeechRecognition();
 
   rec.lang = "te-IN";
   rec.continuous = false;
   rec.interimResults = false;
+  rec.maxAlternatives = 1;
 
   rec.onstart = () => {
     micBtn.textContent = "🔴 Listening...";
     micBtn.disabled = true;
+    add("J.A.R.V.I.S: వింటున్నాను Boss...", "ai");
   };
 
   rec.onresult = event => {
-    const spokenText = event.results[0][0].transcript;
+    const spokenText =
+      event.results[0][0].transcript.trim();
+
+    if (!spokenText) {
+      add("ఏమీ వినిపించలేదు Boss.", "ai");
+      return;
+    }
 
     add("YOU: " + spokenText, "user");
-
     askGroq(spokenText);
   };
 
   rec.onerror = event => {
-    add("MIC ERROR: " + event.error, "ai");
+    console.error("Microphone Error:", event.error);
+
+    const errors = {
+      "not-allowed":
+        "Microphone Permission ఇవ్వండి Boss.",
+      "service-not-allowed":
+        "Speech Recognition Permission లేదు.",
+      "no-speech":
+        "మీ మాట వినిపించలేదు Boss. మళ్ళీ ప్రయత్నించండి.",
+      "audio-capture":
+        "Microphone కనుగొనబడలేదు.",
+      "network":
+        "Internet లేదా Speech Service సమస్య ఉంది.",
+      "aborted":
+        "Microphone ఆగిపోయింది."
+    };
+
+    add(
+      "MIC ERROR: " +
+      (errors[event.error] || event.error),
+      "ai"
+    );
   };
 
   rec.onend = () => {
@@ -718,17 +745,20 @@ if (SpeechRecognition && micBtn) {
   micBtn.addEventListener("click", () => {
     try {
       rec.start();
-    } catch {
-      add("Microphone is already listening.", "ai");
+    } catch (error) {
+      console.error(error);
+      add("MIC START ERROR: " + error.message, "ai");
     }
   });
 
 } else if (micBtn) {
-
   micBtn.disabled = true;
-
-  add("Speech recognition is not supported.", "ai");
+  add(
+    "మీ Browser Speech Recognition కు Support ఇవ్వడం లేదు.",
+    "ai"
+  );
 }
+
 
 // ==========================================
 // 11. SEND BUTTON
