@@ -2,8 +2,28 @@
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 const sendBtn = document.getElementById("send");
+const micBtn = document.getElementById("mic-btn");
+const clearBtn = document.getElementById("clear-btn");
 
 let GROQ_KEY = localStorage.getItem("jarvis_groq_key");
+
+let conversation = [];
+
+try {
+  conversation = JSON.parse(
+    localStorage.getItem("jarvis_memory") || "[]"
+  );
+  if (!Array.isArray(conversation)) conversation = [];
+} catch {
+  conversation = [];
+}
+
+function saveMemory() {
+  localStorage.setItem(
+    "jarvis_memory",
+    JSON.stringify(conversation)
+  );
+}
 
 function add(message, who) {
   const div = document.createElement("div");
@@ -25,7 +45,18 @@ function speak(message) {
   window.speechSynthesis.speak(speech);
 }
 
+// Show previous conversation
+conversation.forEach(message => {
+  if (message.role === "user") {
+    add("YOU: " + message.content, "user");
+  } else if (message.role === "assistant") {
+    add("J.A.R.V.I.S: " + message.content, "ai");
+  }
+});
+
+// GROQ AI
 async function askGroq(question) {
+
   if (!GROQ_KEY) {
     const key = prompt("Enter your Groq API Key:");
 
@@ -45,6 +76,13 @@ async function askGroq(question) {
 
   sendBtn.disabled = true;
 
+  conversation.push({
+    role: "user",
+    content: question
+  });
+
+  saveMemory();
+
   try {
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -59,12 +97,10 @@ async function askGroq(question) {
           messages: [
             {
               role: "system",
-              content: "You are J.A.R.V.I.S, a friendly intelligent AI assistant. Address the user as Boss."
+              content:
+                "You are J.A.R.V.I.S, a friendly intelligent AI assistant. Address the user as Boss."
             },
-            {
-              role: "user",
-              content: question
-            }
+            ...conversation
           ],
           temperature: 0.7,
           max_completion_tokens: 1024
@@ -82,6 +118,13 @@ async function askGroq(question) {
 
     const answer = data.choices[0].message.content;
 
+    conversation.push({
+      role: "assistant",
+      content: answer
+    });
+
+    saveMemory();
+
     loading.textContent = "J.A.R.V.I.S: " + answer;
     speak(answer);
 
@@ -89,19 +132,21 @@ async function askGroq(question) {
     loading.textContent =
       "J.A.R.V.I.S ERROR: " + error.message;
 
+    conversation.pop();
+    saveMemory();
+
   } finally {
     sendBtn.disabled = false;
   }
 }
 
-// ===== MICROPHONE VOICE INPUT =====
-
-const micBtn = document.getElementById("mic-btn");
-
+// MICROPHONE
 const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
 
 if (SpeechRecognition && micBtn) {
+
   const rec = new SpeechRecognition();
 
   rec.lang = "te-IN";
@@ -114,7 +159,8 @@ if (SpeechRecognition && micBtn) {
   };
 
   rec.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
+    const spokenText =
+      event.results[0][0].transcript;
 
     add("YOU: " + spokenText, "user");
     askGroq(spokenText);
@@ -138,18 +184,23 @@ if (SpeechRecognition && micBtn) {
   });
 
 } else if (micBtn) {
+
   micBtn.disabled = true;
-  add("Speech recognition is not supported in this browser.", "ai");
+  add(
+    "Speech recognition is not supported in this browser.",
+    "ai"
+  );
 }
 
-// ===== TEXT SEND BUTTON =====
-
+// SEND BUTTON
 sendBtn.addEventListener("click", () => {
+
   const question = input.value.trim();
 
-  if (!question) return;
+  if (!question || sendBtn.disabled) return;
 
   add("YOU: " + question, "user");
+
   input.value = "";
 
   askGroq(question);
@@ -160,6 +211,34 @@ input.addEventListener("keydown", (event) => {
     sendBtn.click();
   }
 });
+
+// CLEAR MEMORY BUTTON
+if (clearBtn) {
+
+  clearBtn.addEventListener("click", () => {
+
+    const confirmClear = confirm(
+      "Are you sure you want to clear JARVIS memory?"
+    );
+
+    if (!confirmClear) return;
+
+    conversation = [];
+
+    localStorage.removeItem("jarvis_memory");
+
+    chat.innerHTML = "";
+
+    add(
+      "J.A.R.V.I.S: Memory cleared successfully, Boss!",
+      "ai"
+    );
+
+    window.speechSynthesis?.cancel();
+
+  });
+
+}
 
 add(
   "J.A.R.V.I.S: Groq AI initialized. How may I assist you, Boss?",
