@@ -1,12 +1,13 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>J.A.R.V.I.S</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <header>
@@ -46,14 +47,45 @@
     </div>
   </div>
 
+  <!-- CHAT AREA -->
   <div class="chat" id="chat"></div>
 
+  <!-- INPUT AREA -->
   <div class="input-area">
-    <input id="msg" placeholder="Ask J.A.R.V.I.S...">
-    <button id="send" type="button">SEND</button>
-    <button id="mic-btn" type="button">🎙️</button>
+
+    <input
+      id="msg"
+      type="text"
+      placeholder="Ask J.A.R.V.I.S..."
+    >
+
+    <button id="send" type="button">
+      SEND
+    </button>
+
+    <button id="mic-btn" type="button">
+      🎙️
+    </button>
+
+    <button id="cam-btn" type="button">
+      📷
+    </button>
+
+    <button id="clear-btn" type="button">
+      CLEAR MEMORY
+    </button>
+
+    <input
+      id="img-input"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      style="display:none"
+    >
+
   </div>
 
+  <!-- JAVASCRIPT -->
   <script src="script.js"></script>
 
 </body>
